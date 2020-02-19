@@ -41,6 +41,7 @@ const rule = {
       return handleImg();
     }
 
+    // console.log("before url:", link);
     // 处理前端发来的公众号已经抓取至第一篇文章的消息
     if (link.indexOf('/wx/profiles/first_post') > -1 && method === 'POST') {
       const data = JSON.parse(String(requestData));

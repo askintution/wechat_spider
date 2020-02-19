@@ -57,16 +57,16 @@ const config = {
     page: {
       // 是否关闭自动跳转页面的功能
       // 跳转指文章页跳至下一个文章页，不能文章页和公众号历史页互相跳转
-      disable: false,
+      disable: true,
       // 跳转时间间隔，单位秒
-      jumpInterval: 2,
+      jumpInterval: 60,
 
       // 跳转文章发布时间范围
-      minTime: new Date('2020/1/1'),
+      minTime: new Date('2016/1/1'),
       maxTime: new Date('2021/1/1'),
 
       // 已经抓取过的文章是否需要再次抓取
-      isCrawlExist: true,
+      isCrawlExist: false,
       // 如果上面设置为 true，此项可控制再次重复抓取文章的时间间隔
       // updateNumAt - publishAt < crawlExistInterval => 抓取
       // 默认 3 天，数据已趋于稳定
@@ -78,23 +78,23 @@ const config = {
 
       // 是否保存微信文章内容
       // 内容占用很多空间，尤其是html形式
-      isSavePostContent: false,
+      isSavePostContent: true,
       // 保存内容的形式: html/text
-      saveContentType: 'text',
+      saveContentType: 'html',
     },
 
     // 公众号查看全部历史文章页面相关设置
     profile: {
       // 是否关闭自动跳转页面的功能
       // 跳转不能文章页和公众号历史页互相跳转
-      disable: false,
+      disable: true,
       // 跳转时间间隔，单位秒
-      jumpInterval: 8,
+      jumpInterval: 800,
 
       // 页面会自动下拉
       // 下拉至此项设置的时间便会停止
       // 然后跳转至下一个公众号历史页面
-      minTime: new Date('2020/1/1'),
+      minTime: new Date('2016/1/1'),
 
       // 控制在此时间后已经抓取过的公众号本次就不用再抓取了
       maxUpdatedAt: new Date('2021/1/1'),
@@ -108,9 +108,9 @@ const config = {
     isCrawlComments: true,
 
     // 优化项：是否替换掉所有的图片请求
-    isReplaceImg: true,
+    isReplaceImg: false,
     // 优化项：是否替换手机上显示的正文内容
-    isReplacePostBody: true,
+    isReplacePostBody: false,
   },
 
   mp: {

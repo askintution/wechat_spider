@@ -44,6 +44,8 @@ const Post = new Schema({
   content: String,
   // 文章正文 html
   html: String,
+  viewed: Boolean,
+  imported: { type: Boolean, default: false }
 }, { toJSON: { virtuals: true } });
 
 Post.plugin(require('motime'));

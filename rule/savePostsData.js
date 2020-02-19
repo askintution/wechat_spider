@@ -237,18 +237,20 @@ async function getPostDetail(link, body) {
 
       if (pageConfig.saveContentType === 'html') {
         html = $('#js_content').html() || '';
-        content = $('#js_content').text() || '';
+        // content = $('#js_content').text() || '';
       } else {
-        content = $('#js_content').text() || '';
+        // content = $('#js_content').text() || '';
       }
 
-      if (content) content = content.trim();
+      // if (content) content = content.trim();
       if (html) html = html = html.trim();
 
       if (content || html) {
         const updateObj = { msgBiz, msgMid, msgIdx };
-        if (content) updateObj.content = content;
+        // if (content) updateObj.content = content;
         if (html) updateObj.html = html;
+        updateObj.viewed = true;
+        updateObj.imported = false;
         await models.Post.findOneAndUpdate(
           { msgBiz, msgMid, msgIdx },
           { $set: updateObj },

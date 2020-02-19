@@ -34,6 +34,7 @@ const Profile = new Schema({
   latestPublishAt: Date,
   // 每天的最大发布频率
   maxDayPubCount: { type: Number, default: 1 },
+  tags: Array,
 
   // 无关的字段，可忽略
   property: String,

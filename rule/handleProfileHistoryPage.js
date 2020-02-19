@@ -47,6 +47,7 @@ const getProfileBasicInfo = async function (ctx) {
     msgBiz,
     openHistoryPageAt: new Date(),
   };
+
   if (title) updateObj.title = helper.escape2Html(title);
   if (headimg) updateObj.headimg = headimg;
   if (username) updateObj.username = username;
