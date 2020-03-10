@@ -106,6 +106,7 @@ const rule = {
       }
 
       if (isPostPage(link)) {
+        console.log("inter link:", link);
         yield getPostBasicInfo(ctx);
         return yield handlePostHtml(ctx);
       }

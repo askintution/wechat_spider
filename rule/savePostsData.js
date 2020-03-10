@@ -131,7 +131,7 @@ async function savePostsData(postList) {
 // link 必传
 // body 可不传
 async function getPostDetail(link, body) {
-
+  console.log('url:', link);
   if (!link) return;
   const ch = new ContentHandler({ link, body });
 
@@ -143,6 +143,8 @@ async function getPostDetail(link, body) {
   }
 
   body = await ch.getBody();
+
+  console.log("global_error_msg:", body.indexOf('global_error_msg') > -1 || body.indexOf('icon_msg warn') > -1);
 
   // 判断此文是否失效
   if (body.indexOf('global_error_msg') > -1 || body.indexOf('icon_msg warn') > -1) {
@@ -219,17 +221,22 @@ async function getPostDetail(link, body) {
     logger.info('[save profile basic info from post] %s %s %s %s %s', msgBiz, nickname, wechatId, username, headimg);
   }
 
+
+  console.log("pageConfig.isSavePostContent:", pageConfig.isSavePostContent);
+
   // 保存正文内容
   if (pageConfig.isSavePostContent) {
     let shouldSaveToDb = true;
 
     if (doc) {
       if (doc.html && pageConfig.saveContentType === 'html') {
-        shouldSaveToDb = false;
+        shouldSaveToDb = true;
       } else if (doc.content && pageConfig.saveContentType === 'text') {
-        shouldSaveToDb = false;
+        shouldSaveToDb = true;
       }
     }
+
+    console.log("shouldSaveToDb:", shouldSaveToDb);
 
     if (shouldSaveToDb) {
       const $ = cheerio.load(body, { decodeEntities: false });

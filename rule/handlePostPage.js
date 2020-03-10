@@ -49,7 +49,7 @@ const getPostBasicInfo = async function (ctx) {
   const { req, res } = ctx;
   const link = req.url;
   const body = res.response.body.toString();
-
+  // console.log("url1:", link);
   await getPostDetail(link, body);
 };
 

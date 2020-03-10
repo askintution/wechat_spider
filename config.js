@@ -66,7 +66,7 @@ const config = {
       maxTime: new Date('2021/1/1'),
 
       // 已经抓取过的文章是否需要再次抓取
-      isCrawlExist: false,
+      isCrawlExist: true,
       // 如果上面设置为 true，此项可控制再次重复抓取文章的时间间隔
       // updateNumAt - publishAt < crawlExistInterval => 抓取
       // 默认 3 天，数据已趋于稳定
