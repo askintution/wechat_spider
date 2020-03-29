@@ -2,7 +2,6 @@
 
 const url = require('url');
 const moment = require('moment');
-const cheerio = require('cheerio');
 const models = require('../models');
 const logger = require('../utils/logger');
 const redis = require('../utils/redis');
@@ -135,19 +134,15 @@ async function getPostDetail(link, body) {
   if (!link) return;
   const ch = new ContentHandler({ link, body });
 
-  const { msgBiz, msgMid, msgIdx } = await ch.getIdentifying();
-
-  if (!msgBiz || !msgMid || !msgIdx) {
+  const doc = await ch.getDetail();
+  if (!doc) {
     logger.warn('[getPostDetail] can not get identify, link: %s', link);
     return;
   }
 
-  body = await ch.getBody();
+  const { msgBiz, msgMid, msgIdx } = doc;
 
-  console.log("global_error_msg:", body.indexOf('global_error_msg') > -1 || body.indexOf('icon_msg warn') > -1);
-
-  // 判断此文是否失效
-  if (body.indexOf('global_error_msg') > -1 || body.indexOf('icon_msg warn') > -1) {
+  if (doc.isFail) {
     await models.Post.findOneAndUpdate(
       { msgBiz, msgMid, msgIdx },
       { isFail: true },
@@ -156,39 +151,19 @@ async function getPostDetail(link, body) {
     return;
   }
 
+  const {
+    wechatId,
+    username,
+    title,
+    publishAt,
+    sourceUrl,
+    cover,
+    digest,
+    headimg,
+    nickname,
+  } = doc;
 
-  // 从 html 中提取必要信息
-  const getTarget = regexp => {
-    let target;
-    body.replace(regexp, (_, t) => {
-      target = t;
-    });
-    return target;
-  };
-
-  let wechatId = getTarget(/<span class="profile_meta_value">(.+?)<\/span>/);
-  const username = getTarget(/var user_name = "(.+?)"/);
-  // 如果上面找到的微信id中包含中文字符 则证明此微信号没有设置微信id 则取微信给定的 username 初始字段
-  if (wechatId && /[\u4e00-\u9fa5]/.test(wechatId)) {
-    wechatId = username;
-  }
-  const title = getTarget(/var msg_title = "(.+?)";/);
-  let publishAt = getTarget(/var ct = "(\d+)";/);
-  if (publishAt) publishAt = new Date(parseInt(publishAt) * 1000);
-  const sourceUrl = getTarget(/var msg_source_url = '(.*?)';/);
-  const cover = getTarget(/var msg_cdn_url = "(.+?)";/);
-  const digest = getTarget(/var msg_desc = "(.+?)";/);
-
-  // 公众号头像
-  const headimg = getTarget(/var hd_head_img = "(.+?)"/);
-  const nickname = getTarget(/var nickname = "(.+?)"/);
-
-
-  // 从数据库中先查找文章
-  const doc = await models.Post.findOne({ msgBiz, msgMid, msgIdx });
-
-  // 如果文章可以找到，且各字段数据都有，就不必再存一次了
-  if (!(doc && doc.title && doc.link && doc.wechatId)) {
+  {
     const updateObj = { msgBiz, msgMid, msgIdx, link };
     if (title) updateObj.title = title;
     if (wechatId) updateObj.wechatId = wechatId;
@@ -205,9 +180,7 @@ async function getPostDetail(link, body) {
     logger.info('[save post basic info] %s %s %s %s', msgBiz, msgMid, msgIdx, title);
   }
 
-  // 从数据库中查找对应的公众号
-  const profile = await models.Profile.findOne({ msgBiz });
-  if (!(profile && profile.wechatId && profile.username && profile.headimg)) {
+  {
     const updateObj = { msgBiz };
     if (nickname) updateObj.title = nickname;
     if (wechatId) updateObj.wechatId = wechatId;
@@ -226,45 +199,31 @@ async function getPostDetail(link, body) {
 
   // 保存正文内容
   if (pageConfig.isSavePostContent) {
-    let shouldSaveToDb = true;
+    let content, html;
 
-    if (doc) {
-      if (doc.html && pageConfig.saveContentType === 'html') {
-        shouldSaveToDb = true;
-      } else if (doc.content && pageConfig.saveContentType === 'text') {
-        shouldSaveToDb = true;
-      }
+    if (pageConfig.saveContentType === 'html') {
+      html = await ch.toHtml();
+      // html = $('#js_content').html() || '';
+      // content = $('#js_content').text() || '';
+    } else {
+      // content = $('#js_content').text() || '';
     }
 
-    console.log("shouldSaveToDb:", shouldSaveToDb);
+    // if (content) content = content.trim();
+    if (html) html = html = html.trim();
 
-    if (shouldSaveToDb) {
-      const $ = cheerio.load(body, { decodeEntities: false });
-      let content, html;
-
-      if (pageConfig.saveContentType === 'html') {
-        html = $('#js_content').html() || '';
-        // content = $('#js_content').text() || '';
-      } else {
-        // content = $('#js_content').text() || '';
-      }
-
-      // if (content) content = content.trim();
-      if (html) html = html = html.trim();
-
-      if (content || html) {
-        const updateObj = { msgBiz, msgMid, msgIdx };
-        // if (content) updateObj.content = content;
-        if (html) updateObj.html = html;
-        updateObj.viewed = true;
-        updateObj.imported = false;
-        await models.Post.findOneAndUpdate(
-          { msgBiz, msgMid, msgIdx },
-          { $set: updateObj },
-          { upsert: true }
-        );
-        logger.info('[save post content] %s %s %s %s', msgBiz, msgMid, msgIdx, title);
-      }
+    if (content || html) {
+      const updateObj = { msgBiz, msgMid, msgIdx };
+      // if (content) updateObj.content = content;
+      if (html) updateObj.html = html;
+      updateObj.viewed = true;
+      updateObj.imported = false;
+      await models.Post.findOneAndUpdate(
+        { msgBiz, msgMid, msgIdx },
+        { $set: updateObj },
+        { upsert: true }
+      );
+      logger.info('[save post content] %s %s %s %s', msgBiz, msgMid, msgIdx, title);
     }
   }
 }
